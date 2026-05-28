@@ -152,3 +152,4 @@ window.addEventListener('resize', () => {
 resize();
 initShapes();
 loop();
+// small change
