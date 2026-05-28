@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 # Rejects any staged .html or .js file that exceeds 400 lines.
 # Keeps individual files reviewable and prevents LLM-generated monoliths
 # from sneaking in through a single commit.
