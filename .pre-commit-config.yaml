@@ -6,3 +6,4 @@ repos:
         entry: .pre-commit-hooks/check-file-size.sh
         language: script
         types_or: [html, javascript]
+        exclude: ^reports/
