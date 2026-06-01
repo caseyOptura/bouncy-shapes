@@ -5,6 +5,7 @@ const AIR_FRICTION = 0.988;
 const STOP_VY = 0.9;
 
 export function update(shapes, W, H) {
+  let groundHit = false
   for (const s of shapes) {
     s.vy += GRAVITY;
     s.vx *= AIR_FRICTION;
@@ -13,6 +14,7 @@ export function update(shapes, W, H) {
 
     if (s.y + s.r >= H) {
       s.y = H - s.r;
+      if (Math.abs(s.vy) >= STOP_VY) groundHit = true
       s.vy = Math.abs(s.vy) < STOP_VY ? 0 : -Math.abs(s.vy) * FLOOR_RESTITUTION;
     }
 
@@ -31,4 +33,5 @@ export function update(shapes, W, H) {
       s.vx = -Math.abs(s.vx) * WALL_RESTITUTION;
     }
   }
+  return groundHit && shapes.every(s => s.y + s.r >= H)
 }
