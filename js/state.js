@@ -17,4 +17,4 @@ export function addPoint() {
   if (state.score > state.highScore) { state.highScore = state.score; persist(); return true }
   return false
 }
-export function resetScore() { state.score = 0; state.highScore = 0; persist() }
+export function resetScore() { state.score = 0 }

@@ -93,7 +93,6 @@ ui.buildUI({
   onResetScore() {
     resetScore()
     ui.setScore(state.score)
-    ui.setBest(state.highScore)
   },
 })
 
