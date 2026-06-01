@@ -142,3 +142,18 @@ export function setSoundLabel(on) {
     el.setAttribute('aria-pressed', on ? 'true' : 'false')
   }
 }
+
+export function showPrestige(stars) {
+  let el = document.getElementById('prestige-callout')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'prestige-callout'
+    document.body.appendChild(el)
+  }
+  const starStr = '★'.repeat(stars)
+  el.innerHTML = `<div class="prestige-label">PRESTIGE</div><div class="prestige-stars" data-stars="${stars}">${starStr}</div>`
+  el.classList.remove('prestige-active', 'prestige-long')
+  void el.offsetWidth
+  el.classList.add('prestige-active')
+  if (stars === 5) el.classList.add('prestige-long')
+}

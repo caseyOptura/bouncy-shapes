@@ -1,10 +1,11 @@
 import { THEMES, nextThemeIndex } from './themes.js'
 import { update } from './physics.js'
 import { draw } from './render.js'
-import { resumeContext, playTap, setMuted } from './audio.js'
+import { resumeContext, playTap, setMuted, playPrestige, resetTapCycle } from './audio.js'
 import { createShapes, recolorShapes } from './shapes.js'
 import { state, setThemeIndex, setShapeCount, setSoundOn, addPoint, resetScore } from './state.js'
 import * as ui from './ui.js'
+import { checkPrestige } from './prestige.js'
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -17,7 +18,7 @@ let H = 0
 let shapes = []
 
 // Prevent iOS edge-swipe navigation
-document.addEventListener('touchstart', e => e.preventDefault(), { passive: false })
+document.addEventListener('touchstart', e => { if (e.target === canvas) e.preventDefault() }, { passive: false })
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false })
 
 function resize() {
@@ -72,6 +73,11 @@ canvas.addEventListener('pointerdown', e => {
     addPoint()
     ui.setScore(state.score)
     ui.setBest(state.highScore)
+    const stars = checkPrestige(state.score)
+    if (stars) {
+      ui.showPrestige(stars)
+      if (state.soundOn) playPrestige(stars)
+    }
   }
 }, { passive: false })
 
@@ -114,7 +120,11 @@ window.addEventListener('resize', () => {
 })
 
 function loop() {
-  update(shapes, W, H)
+  if (update(shapes, W, H) && state.score > 0) {
+    resetScore()
+    resetTapCycle()
+    ui.setScore(state.score)
+  }
   draw(ctx, shapes, W, H)
   requestAnimationFrame(loop)
 }
