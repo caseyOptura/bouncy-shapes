@@ -6,6 +6,7 @@ import { createShapes, recolorShapes } from './shapes.js'
 import { state, setThemeIndex, setShapeCount, setSoundOn, addPoint, resetScore } from './state.js'
 import * as ui from './ui.js'
 import { checkPrestige } from './prestige.js'
+import { speak } from './speech.js'
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -121,6 +122,7 @@ window.addEventListener('resize', () => {
 
 function loop() {
   if (update(shapes, W, H) && state.score > 0) {
+    speak("Good try! Let's go again!")
     resetScore()
     resetTapCycle()
     ui.setScore(state.score)
