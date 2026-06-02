@@ -1,13 +1,27 @@
 let _ctx = null
+let _masterGain = null
 let _muted = false
+let _maxVolume = 1
 
 export function setMuted(v) { _muted = !!v }
 export function isMuted() { return _muted }
 
+export function setMaxVolume(v) {
+  _maxVolume = Math.max(0, Math.min(1, Number(v) || 0))
+  if (_masterGain) _masterGain.gain.value = _maxVolume
+}
+
 export function resumeContext() {
-  if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)()
+  if (!_ctx) {
+    _ctx = new (window.AudioContext || window.webkitAudioContext)()
+    _masterGain = _ctx.createGain()
+    _masterGain.gain.value = _maxVolume
+    _masterGain.connect(_ctx.destination)
+  }
   if (_ctx.state === 'suspended') _ctx.resume()
 }
+
+function _dest() { return _masterGain || (_ctx && _ctx.destination) }
 
 // Tap cycles through a pentatonic scale so repeated hits feel musical
 const PENTA = [523, 587, 659, 784, 880] // C5 D5 E5 G5 A5
@@ -42,7 +56,7 @@ function _adsr(freq, type, t, start, peak, dur) {
   const osc = _ctx.createOscillator()
   const g = _ctx.createGain()
   osc.type = type; osc.frequency.value = freq
-  osc.connect(g); g.connect(_ctx.destination)
+  osc.connect(g); g.connect(_dest())
   const T = t + start
   g.gain.setValueAtTime(0.0001, T)
   g.gain.linearRampToValueAtTime(peak, T + 0.008)
@@ -74,7 +88,7 @@ function _brass(freq, t, start, dur) {
   flt.frequency.setValueAtTime(freq * 2.5, t + start)
   flt.frequency.linearRampToValueAtTime(freq * 6,   t + start + 0.06)
   flt.frequency.linearRampToValueAtTime(freq * 3.5, t + start + 0.28)
-  osc.connect(flt); flt.connect(g); g.connect(_ctx.destination)
+  osc.connect(flt); flt.connect(g); g.connect(_dest())
   g.gain.setValueAtTime(0.0001, t + start)
   g.gain.linearRampToValueAtTime(0.15, t + start + 0.04)
   g.gain.setValueAtTime(0.15, t + start + dur * 0.72)
@@ -90,7 +104,7 @@ function _strings(freq, t, start, dur) {
     const g   = _ctx.createGain()
     osc.type = 'sawtooth'; osc.frequency.value = freq; osc.detune.value = det
     flt.type = 'lowpass'; flt.frequency.value = freq * 4; flt.Q.value = 0.4
-    osc.connect(flt); flt.connect(g); g.connect(_ctx.destination)
+    osc.connect(flt); flt.connect(g); g.connect(_dest())
     g.gain.setValueAtTime(0.0001, t + start)
     g.gain.linearRampToValueAtTime(0.052, t + start + 0.18) // bow attack
     g.gain.setValueAtTime(0.052, t + start + dur * 0.72)
@@ -106,7 +120,7 @@ function _timpani(t) {
   osc.type = 'sine'
   osc.frequency.setValueAtTime(155, t)
   osc.frequency.exponentialRampToValueAtTime(78, t + 0.9)
-  osc.connect(g); g.connect(_ctx.destination)
+  osc.connect(g); g.connect(_dest())
   g.gain.setValueAtTime(0.0001, t)
   g.gain.linearRampToValueAtTime(0.42, t + 0.008)
   g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1)
@@ -124,7 +138,7 @@ function _cymbal(t, dur) {
   const flt = _ctx.createBiquadFilter()
   flt.type = 'highpass'; flt.frequency.value = 5500
   const g = _ctx.createGain()
-  src.connect(flt); flt.connect(g); g.connect(_ctx.destination)
+  src.connect(flt); flt.connect(g); g.connect(_dest())
   g.gain.setValueAtTime(0.11, t)
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
   src.start(t); src.stop(t + dur + 0.01)
