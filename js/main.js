@@ -1,12 +1,13 @@
 import { THEMES, nextThemeIndex } from './themes.js'
 import { update } from './physics.js'
 import { draw } from './render.js'
-import { resumeContext, playTap, setMuted, playPrestige, resetTapCycle } from './audio.js'
+import { resumeContext, playTap, setMuted, playPrestige, resetTapCycle, setMaxVolume } from './audio.js'
 import { createShapes, recolorShapes } from './shapes.js'
-import { state, setThemeIndex, setShapeCount, setSoundOn, addPoint, resetScore } from './state.js'
+import { state, setThemeIndex, setShapeCount, setSoundOn, addPoint, resetScore, addPlayTime } from './state.js'
 import * as ui from './ui.js'
 import { checkPrestige } from './prestige.js'
 import { speak } from './speech.js'
+import { buildParentSettings, checkBudgetWarning, resetBudgetWarning } from './settings.js'
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -88,6 +89,7 @@ ui.buildUI({
     applyTheme()
   },
   onShapeCountChange(delta) {
+    if (state.shapeLocked) return
     setShapeCount(state.shapeCount + delta)
     ui.setShapeCountLabel(state.shapeCount)
     rebuildShapes()
@@ -103,8 +105,16 @@ ui.buildUI({
   },
 })
 
+buildParentSettings({
+  onShapeLockChange(locked) {
+    ui.setShapeButtonsDisabled(locked)
+  },
+})
+
 // Apply initial mute state
 setMuted(!state.soundOn)
+// Apply initial max volume
+setMaxVolume(state.maxVolume)
 
 // Apply initial theme and sync UI
 resize()
@@ -114,17 +124,30 @@ ui.setScore(state.score)
 ui.setBest(state.highScore)
 ui.setShapeCountLabel(state.shapeCount)
 ui.setSoundLabel(state.soundOn)
+ui.setShapeButtonsDisabled(state.shapeLocked)
 
 window.addEventListener('resize', () => {
   resize()
   rebuildShapes()
 })
 
+let _lastFrameTime = performance.now()
+
 function loop() {
+  const now = performance.now()
+  const elapsed = now - _lastFrameTime
+  _lastFrameTime = now
+
+  // Playtime tracking — accumulate per animation frame
+  addPlayTime(elapsed)
+  checkBudgetWarning(state.playTimeMs)
+
   if (update(shapes, W, H) && state.score > 0) {
-    speak("Good try! Let's go again!")
+    const name = state.childName ? `${state.childName}, g` : 'G'
+    speak(`${name}ood try! Let's go again!`)
     resetScore()
     resetTapCycle()
+    resetBudgetWarning()
     ui.setScore(state.score)
   }
   draw(ctx, shapes, W, H)

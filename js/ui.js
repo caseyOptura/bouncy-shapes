@@ -143,6 +143,13 @@ export function setSoundLabel(on) {
   }
 }
 
+export function setShapeButtonsDisabled(disabled) {
+  const dec = document.getElementById('shapes-dec')
+  const inc = document.getElementById('shapes-inc')
+  if (dec) dec.disabled = disabled
+  if (inc) inc.disabled = disabled
+}
+
 export function showPrestige(stars) {
   let el = document.getElementById('prestige-callout')
   if (!el) {
