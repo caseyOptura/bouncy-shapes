@@ -1,3 +1,19 @@
+/**
+ * Persisted settings for bouncy-shapes.
+ *
+ * Covers all persisted state: game preferences (theme, shape count, sound),
+ * parent controls (child name, max volume, shape lock, daily play budget),
+ * and playtime tracking (accumulated ms + date key for daily reset).
+ *
+ * parseSafe(raw) is the single read path — pass any value from localStorage
+ * and get back a fully-valid state object. All type coercion and range
+ * clamping lives here via _int/_float helpers; loadState() only handles
+ * the localStorage read and JSON parse.
+ *
+ * The TypeScript/Zod equivalent of this contract lives in
+ * kit/schemas/settings.ts in the self-guided-claude-code-training repo.
+ * Keep DEFAULTS and the field constraints in both files in sync.
+ */
 import { THEMES } from './themes.js'
 import { MIN_SHAPES, MAX_SHAPES } from './shapes.js'
 
